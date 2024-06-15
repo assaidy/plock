@@ -18,9 +18,9 @@ def usage() -> None:
     print("without options:    normal clock")
     print()
     print("OPTIONS: ")
-    print("    up      [TIME_FORMAT]")
-    print("    down    [TIME_FORMAT]")
-    print("    help    [print help]")
+    print("    up      [TIME_FORMAT]    Start a count-up timer")
+    print("    down    [TIME_FORMAT]    Start a count-down timer")
+    print("    help                     print help")
     print()
     print("time formats: [$h $m $s] [$h] [$m] [$s]")
 
