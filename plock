@@ -9,8 +9,6 @@ import sys
 import time
 from datetime import datetime
 
-# TODO: improve UI
-
 
 def usage() -> None:
     print(f"Usage: {sys.argv[0]} [OPTION] [TIME_FORMAT]")
@@ -25,7 +23,116 @@ def usage() -> None:
     print("time formats: [$h $m $s] [$h] [$m] [$s]")
 
 
-def play_bell_sound(file_path):
+def render_ascii_art(input: str) -> list[str]:
+    ascii_art_map = {
+        "0": [
+            "███████",
+            "██  ███",
+            "██ █ ██",
+            "███  ██",
+            "███████",
+        ],
+        "1": [
+            " ██",
+            "███",
+            " ██",
+            " ██",
+            " ██",
+        ],
+        "2": [
+            "██████",
+            "    ██",
+            "██████",
+            "██    ",
+            "██████",
+        ],
+        "3": [
+            "██████",
+            "    ██",
+            " █████",
+            "    ██",
+            "██████",
+        ],
+        "4": [
+            "██   ██",
+            "██   ██",
+            "███████",
+            "     ██",
+            "     ██",
+        ],
+        "5": [
+            "███████",
+            "██     ",
+            "███████",
+            "     ██",
+            "███████",
+        ],
+        "6": [
+            "███████",
+            "██     ",
+            "███████",
+            "██   ██",
+            "███████",
+        ],
+        "7": [
+            "███████",
+            "     ██",
+            "     ██",
+            "     ██",
+            "     ██",
+        ],
+        "8": [
+            "███████",
+            "██   ██",
+            "███████",
+            "██   ██",
+            "███████",
+        ],
+        "9": [
+            "███████",
+            "██   ██",
+            "███████",
+            "     ██",
+            "███████",
+        ],
+        ":": [
+            "    ",
+            " ██ ",
+            "    ",
+            " ██ ",
+            "    ",
+        ],
+    }
+
+    # split the input_string into characters
+    characters = list(input)
+
+    # initialize a list to store each line of the final ASCII art
+    # 5 lines for each character
+    ascii_art_lines = [""] * 5
+
+    # for each character, append the corresponding ASCII art to the lines
+    for char in characters:
+        char_art = ascii_art_map.get(char, ["        "] * 5)
+        padding = " "
+        for i in range(5):
+            ascii_art_lines[i] += char_art[i] + padding
+
+    # join the lines into a single string with newline characters
+    # ascii_art = "\n".join(ascii_art_lines)
+
+    return ascii_art_lines
+
+
+def render_curs(win, ascii: list[str]) -> None:
+    heigh, width = win.getmaxyx()
+    x = (width - len(ascii[0])) // 2
+    y = (heigh - 5) // 2
+    for i, line in enumerate(ascii):
+        win.addstr(y + i, x, line)
+
+
+def play_bell_sound(file_path) -> None:
     system_name = platform.system()
     if system_name == "Linux":
         with open(os.devnull, "w") as devnull:
@@ -67,14 +174,13 @@ def time_up(stdscr, initial):
         setup_curs()
         height, width = stdscr.getmaxyx()
         win = curses.newwin(height, width, 0, 0)
-        center_x = width // 2
-        center_y = height // 2
 
         while True:
             win.clear()
             t = ftime(initial)
             initial += 1
-            win.addstr(center_y, center_x - len(t) // 2, t)
+            ascii_str = render_ascii_art(t)
+            render_curs(win, ascii_str)
             win.refresh()
             time.sleep(1)
 
@@ -84,8 +190,6 @@ def time_up(stdscr, initial):
             if key == curses.KEY_RESIZE:
                 height, width = stdscr.getmaxyx()
                 win = curses.newwin(height, width, 0, 0)
-                center_x = width // 2
-                center_y = height // 2
 
     except KeyboardInterrupt:
         return
@@ -96,13 +200,12 @@ def time_down(stdscr, initial):
         setup_curs()
         height, width = stdscr.getmaxyx()
         win = curses.newwin(height, width, 0, 0)
-        center_x = width // 2
-        center_y = height // 2
 
         for i in range(initial, 0, -1):
             win.clear()
             t = ftime(i)
-            win.addstr(center_y, center_x - len(t) // 2, t)
+            ascii_str = render_ascii_art(t)
+            render_curs(win, ascii_str)
             win.refresh()
             time.sleep(1)
 
@@ -112,8 +215,6 @@ def time_down(stdscr, initial):
             if key == curses.KEY_RESIZE:
                 height, width = stdscr.getmaxyx()
                 win = curses.newwin(height, width, 0, 0)
-                center_x = width // 2
-                center_y = height // 2
         HOME = os.getenv("HOME")
         play_bell_sound(f"{HOME}/.local/share/plock/bell.wav")
     except KeyboardInterrupt:
@@ -125,14 +226,13 @@ def time_clock(stdscr):
         setup_curs()
         height, width = stdscr.getmaxyx()
         win = curses.newwin(height, width, 0, 0)
-        center_x = width // 2
-        center_y = height // 2
 
         while True:
             win.clear()
             now = datetime.now()
             t = now.strftime("%H:%M:%S")
-            win.addstr(center_y, center_x - len(t) // 2, t)
+            ascii_str = render_ascii_art(t)
+            render_curs(win, ascii_str)
             win.refresh()
             time.sleep(1)
 
@@ -142,8 +242,6 @@ def time_clock(stdscr):
             if key == curses.KEY_RESIZE:
                 height, width = stdscr.getmaxyx()
                 win = curses.newwin(height, width, 0, 0)
-                center_x = width // 2
-                center_y = height // 2
     except KeyboardInterrupt:
         return
 
