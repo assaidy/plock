@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+
+import curses
+import os
+import platform
+import re
+import subprocess
+import sys
+import time
+from datetime import datetime
+
+# TODO: improve UI
+
+
+def usage() -> None:
+    print(f"Usage: {sys.argv[0]} [OPTION] [TIME_FORMAT]")
+    print()
+    print("without options:    normal clock")
+    print()
+    print("OPTIONS: ")
+    print("    up      [TIME_FORMAT]")
+    print("    down    [TIME_FORMAT]")
+    print("    help    [print help]")
+    print()
+    print("time formats: [$h $m $s] [$h] [$m] [$s]")
+
+
+def play_bell_sound(file_path):
+    system_name = platform.system()
+    if system_name == "Linux":
+        with open(os.devnull, "w") as devnull:
+            subprocess.run(["aplay", file_path], stdout=devnull, stderr=devnull)
+    elif system_name == "Darwin":  # macOS
+        with open(os.devnull, "w") as devnull:
+            subprocess.run(["afplay", file_path], stdout=devnull, stderr=devnull)
+    else:
+        print("Unsupported operating system for this method")
+
+
+def ftime(seconds: int) -> str:
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 3600 % 60
+    return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+
+def parse_seconds(input: str) -> int:
+    pattern = r"^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+)s)?$"
+    match = re.match(pattern, input)
+
+    if not match:
+        return -1
+
+    hours, minutes, seconds = match.groups(default="0")
+    return int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+
+
+def setup_curs() -> None:
+    curses.start_color()
+    curses.use_default_colors()
+    curses.noecho()
+    curses.curs_set(0)
+
+
+def time_up(stdscr, initial):
+    try:
+        setup_curs()
+        height, width = stdscr.getmaxyx()
+        win = curses.newwin(height, width, 0, 0)
+        center_x = width // 2
+        center_y = height // 2
+
+        while True:
+            win.clear()
+            t = ftime(initial)
+            initial += 1
+            win.addstr(center_y, center_x - len(t) // 2, t)
+            win.refresh()
+            time.sleep(1)
+
+            # Check for resize event
+            stdscr.nodelay(True)  # Make getch non-blocking
+            key = stdscr.getch()
+            if key == curses.KEY_RESIZE:
+                height, width = stdscr.getmaxyx()
+                win = curses.newwin(height, width, 0, 0)
+                center_x = width // 2
+                center_y = height // 2
+
+    except KeyboardInterrupt:
+        return
+
+
+def time_down(stdscr, initial):
+    try:
+        setup_curs()
+        height, width = stdscr.getmaxyx()
+        win = curses.newwin(height, width, 0, 0)
+        center_x = width // 2
+        center_y = height // 2
+
+        for i in range(initial, 0, -1):
+            win.clear()
+            t = ftime(i)
+            win.addstr(center_y, center_x - len(t) // 2, t)
+            win.refresh()
+            time.sleep(1)
+
+            # Check for resize event
+            stdscr.nodelay(True)  # Make getch non-blocking
+            key = stdscr.getch()
+            if key == curses.KEY_RESIZE:
+                height, width = stdscr.getmaxyx()
+                win = curses.newwin(height, width, 0, 0)
+                center_x = width // 2
+                center_y = height // 2
+        HOME = os.getenv("HOME")
+        play_bell_sound(f"{HOME}/.local/share/plock/bell.wav")
+    except KeyboardInterrupt:
+        return
+
+
+def time_clock(stdscr):
+    try:
+        setup_curs()
+        height, width = stdscr.getmaxyx()
+        win = curses.newwin(height, width, 0, 0)
+        center_x = width // 2
+        center_y = height // 2
+
+        while True:
+            win.clear()
+            now = datetime.now()
+            t = now.strftime("%H:%M:%S")
+            win.addstr(center_y, center_x - len(t) // 2, t)
+            win.refresh()
+            time.sleep(1)
+
+            # Check for resize event
+            stdscr.nodelay(True)  # Make getch non-blocking
+            key = stdscr.getch()
+            if key == curses.KEY_RESIZE:
+                height, width = stdscr.getmaxyx()
+                win = curses.newwin(height, width, 0, 0)
+                center_x = width // 2
+                center_y = height // 2
+    except KeyboardInterrupt:
+        return
+
+
+def main() -> None:
+    if len(sys.argv) == 1:
+        curses.wrapper(time_clock)
+    else:
+        args = sys.argv[1:]
+        if args[0] == "up":
+            start = 0
+            if len(args) > 1:
+                start = parse_seconds(args[1])
+                if start < 0:
+                    print(f"[ERROR] invalid time format.")
+                    usage()
+                    exit(1)
+            curses.wrapper(time_up, start)
+
+        elif args[0] == "down":
+            if len(args) < 2:
+                usage()
+                exit(1)
+            start = parse_seconds(args[1])
+            if start < 0:
+                print(f"[ERROR] invalid time format.")
+                usage()
+                exit(1)
+            curses.wrapper(time_down, start)
+
+        else:
+            usage()
+
+
+if __name__ == "__main__":
+    main()
