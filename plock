@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 def usage() -> None:
-    print(f"Usage: {sys.argv[0]} [OPTION] [TIME_FORMAT]")
+    print(f"Usage: plock [OPTION] [TIME_FORMAT]")
     print()
     print("without options:    normal clock")
     print()
