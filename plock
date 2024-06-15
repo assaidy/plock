@@ -215,6 +215,12 @@ def time_down(stdscr, initial):
             if key == curses.KEY_RESIZE:
                 height, width = stdscr.getmaxyx()
                 win = curses.newwin(height, width, 0, 0)
+
+        win.clear()
+        ascii_str = render_ascii_art("00:00:00")
+        render_curs(win, ascii_str)
+        win.refresh()
+
         HOME = os.getenv("HOME")
         play_bell_sound(f"{HOME}/.local/share/plock/bell.wav")
     except KeyboardInterrupt:
