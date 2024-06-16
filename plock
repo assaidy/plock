@@ -3,6 +3,7 @@
 import curses
 import os
 import platform
+import random
 import re
 import subprocess
 import sys
@@ -26,18 +27,18 @@ def usage() -> None:
 def render_ascii_art(input: str) -> list[str]:
     ascii_art_map = {
         "0": [
-            "███████",
-            "██  ███",
-            "██ █ ██",
-            "███  ██",
-            "███████",
+            "██████",
+            "██  ██",
+            "██  ██",
+            "██  ██",
+            "██████",
         ],
         "1": [
-            " ██",
-            "███",
-            " ██",
-            " ██",
-            " ██",
+            "  ██  ",
+            "████  ",
+            "  ██  ",
+            "  ██  ",
+            "██████",
         ],
         "2": [
             "██████",
@@ -49,58 +50,58 @@ def render_ascii_art(input: str) -> list[str]:
         "3": [
             "██████",
             "    ██",
-            " █████",
+            "██████",
             "    ██",
             "██████",
         ],
         "4": [
-            "██   ██",
-            "██   ██",
-            "███████",
-            "     ██",
-            "     ██",
+            "██  ██",
+            "██  ██",
+            "██████",
+            "    ██",
+            "    ██",
         ],
         "5": [
-            "███████",
-            "██     ",
-            "███████",
-            "     ██",
-            "███████",
+            "██████",
+            "██    ",
+            "██████",
+            "    ██",
+            "██████",
         ],
         "6": [
-            "███████",
-            "██     ",
-            "███████",
-            "██   ██",
-            "███████",
+            "██████",
+            "██    ",
+            "██████",
+            "██  ██",
+            "██████",
         ],
         "7": [
-            "███████",
-            "     ██",
-            "     ██",
-            "     ██",
-            "     ██",
+            "██████",
+            "    ██",
+            "    ██",
+            "    ██",
+            "    ██",
         ],
         "8": [
-            "███████",
-            "██   ██",
-            "███████",
-            "██   ██",
-            "███████",
+            "██████",
+            "██  ██",
+            "██████",
+            "██  ██",
+            "██████",
         ],
         "9": [
-            "███████",
-            "██   ██",
-            "███████",
-            "     ██",
-            "███████",
+            "██████",
+            "██  ██",
+            "██████",
+            "    ██",
+            "██████",
         ],
         ":": [
-            "    ",
-            " ██ ",
-            "    ",
-            " ██ ",
-            "    ",
+            "      ",
+            "  ██  ",
+            "      ",
+            "  ██  ",
+            "      ",
         ],
     }
 
@@ -124,12 +125,12 @@ def render_ascii_art(input: str) -> list[str]:
     return ascii_art_lines
 
 
-def render_curs(win, ascii: list[str]) -> None:
+def render_curs(win, ascii: list[str], color) -> None:
     heigh, width = win.getmaxyx()
     x = (width - len(ascii[0])) // 2
     y = (heigh - 5) // 2
     for i, line in enumerate(ascii):
-        win.addstr(y + i, x, line)
+        win.addstr(y + i, x, line, color)
 
 
 def play_bell_sound(file_path) -> None:
@@ -163,10 +164,19 @@ def parse_seconds(input: str) -> int:
 
 
 def setup_curs() -> None:
-    curses.start_color()
-    curses.use_default_colors()
     curses.noecho()
     curses.curs_set(0)
+
+    curses.start_color()
+    curses.use_default_colors()
+    curses.init_pair(1, curses.COLOR_RED, -1)
+    curses.init_pair(2, curses.COLOR_GREEN, -1)
+    curses.init_pair(3, curses.COLOR_BLUE, -1)
+
+
+def get_rand_color():
+    color_id = random.randrange(1, 4)
+    return curses.color_pair(color_id)
 
 
 def time_up(stdscr, initial):
@@ -175,12 +185,14 @@ def time_up(stdscr, initial):
         height, width = stdscr.getmaxyx()
         win = curses.newwin(height, width, 0, 0)
 
+        color = get_rand_color()
+
         while True:
             win.clear()
             t = ftime(initial)
             initial += 1
             ascii_str = render_ascii_art(t)
-            render_curs(win, ascii_str)
+            render_curs(win, ascii_str, color)
             win.refresh()
             time.sleep(1)
 
@@ -201,11 +213,13 @@ def time_down(stdscr, initial):
         height, width = stdscr.getmaxyx()
         win = curses.newwin(height, width, 0, 0)
 
+        color = get_rand_color()
+
         for i in range(initial, 0, -1):
             win.clear()
             t = ftime(i)
             ascii_str = render_ascii_art(t)
-            render_curs(win, ascii_str)
+            render_curs(win, ascii_str, color)
             win.refresh()
             time.sleep(1)
 
@@ -218,7 +232,7 @@ def time_down(stdscr, initial):
 
         win.clear()
         ascii_str = render_ascii_art("00:00:00")
-        render_curs(win, ascii_str)
+        render_curs(win, ascii_str, color)
         win.refresh()
 
         HOME = os.getenv("HOME")
@@ -233,12 +247,14 @@ def time_clock(stdscr):
         height, width = stdscr.getmaxyx()
         win = curses.newwin(height, width, 0, 0)
 
+        color = get_rand_color()
+
         while True:
             win.clear()
             now = datetime.now()
             t = now.strftime("%H:%M:%S")
             ascii_str = render_ascii_art(t)
-            render_curs(win, ascii_str)
+            render_curs(win, ascii_str, color)
             win.refresh()
             time.sleep(1)
 
