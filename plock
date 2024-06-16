@@ -10,6 +10,8 @@ import sys
 import time
 from datetime import datetime
 
+COLOR_COUNT = 8
+
 
 def usage() -> None:
     print(f"Usage: plock [OPTION] [TIME_FORMAT]")
@@ -152,7 +154,7 @@ def ftime(seconds: int) -> str:
     return f"{hours:02}:{minutes:02}:{seconds:02}"
 
 
-def parse_seconds(input: str) -> int:
+def extract_seconds(input: str) -> int:
     pattern = r"^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+)s)?$"
     match = re.match(pattern, input)
 
@@ -169,21 +171,20 @@ def setup_curs() -> None:
 
     curses.start_color()
     curses.use_default_colors()
-    curses.init_pair(1, curses.COLOR_RED, -1)
-    curses.init_pair(2, curses.COLOR_GREEN, -1)
-    curses.init_pair(3, curses.COLOR_BLUE, -1)
+    for i in range(1, COLOR_COUNT + 1):
+        curses.init_pair(i, i, -1)
 
 
 def get_rand_color():
-    color_id = random.randrange(1, 4)
+    color_id = random.randrange(1, COLOR_COUNT + 1)
     return curses.color_pair(color_id)
 
 
 def time_up(stdscr, initial):
     try:
         setup_curs()
-        height, width = stdscr.getmaxyx()
-        win = curses.newwin(height, width, 0, 0)
+
+        win = stdscr
 
         color = get_rand_color()
 
@@ -200,8 +201,7 @@ def time_up(stdscr, initial):
             stdscr.nodelay(True)  # Make getch non-blocking
             key = stdscr.getch()
             if key == curses.KEY_RESIZE:
-                height, width = stdscr.getmaxyx()
-                win = curses.newwin(height, width, 0, 0)
+                curses.resizeterm(*stdscr.getmaxyx())
 
     except KeyboardInterrupt:
         return
@@ -210,8 +210,8 @@ def time_up(stdscr, initial):
 def time_down(stdscr, initial):
     try:
         setup_curs()
-        height, width = stdscr.getmaxyx()
-        win = curses.newwin(height, width, 0, 0)
+
+        win = stdscr
 
         color = get_rand_color()
 
@@ -227,8 +227,7 @@ def time_down(stdscr, initial):
             stdscr.nodelay(True)  # Make getch non-blocking
             key = stdscr.getch()
             if key == curses.KEY_RESIZE:
-                height, width = stdscr.getmaxyx()
-                win = curses.newwin(height, width, 0, 0)
+                curses.resizeterm(*stdscr.getmaxyx())
 
         win.clear()
         ascii_str = render_ascii_art("00:00:00")
@@ -236,7 +235,8 @@ def time_down(stdscr, initial):
         win.refresh()
 
         HOME = os.getenv("HOME")
-        play_bell_sound(f"{HOME}/.local/share/plock/bell.wav")
+        play_bell_sound(f"{HOME}/.localshare/plock/bell.wav")
+
     except KeyboardInterrupt:
         return
 
@@ -244,8 +244,8 @@ def time_down(stdscr, initial):
 def time_clock(stdscr):
     try:
         setup_curs()
-        height, width = stdscr.getmaxyx()
-        win = curses.newwin(height, width, 0, 0)
+
+        win = stdscr
 
         color = get_rand_color()
 
@@ -262,8 +262,8 @@ def time_clock(stdscr):
             stdscr.nodelay(True)  # Make getch non-blocking
             key = stdscr.getch()
             if key == curses.KEY_RESIZE:
-                height, width = stdscr.getmaxyx()
-                win = curses.newwin(height, width, 0, 0)
+                curses.resizeterm(*stdscr.getmaxyx())
+
     except KeyboardInterrupt:
         return
 
@@ -276,7 +276,7 @@ def main() -> None:
         if args[0] == "up":
             start = 0
             if len(args) > 1:
-                start = parse_seconds(args[1])
+                start = extract_seconds(args[1])
                 if start < 0:
                     print(f"[ERROR] invalid time format.")
                     usage()
@@ -287,7 +287,7 @@ def main() -> None:
             if len(args) < 2:
                 usage()
                 exit(1)
-            start = parse_seconds(args[1])
+            start = extract_seconds(args[1])
             if start < 0:
                 print(f"[ERROR] invalid time format.")
                 usage()
