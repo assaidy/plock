@@ -235,7 +235,7 @@ def time_down(stdscr, initial):
         win.refresh()
 
         HOME = os.getenv("HOME")
-        play_bell_sound(f"{HOME}/.localshare/plock/bell.wav")
+        play_bell_sound(f"{HOME}/.local/share/plock/bell.wav")
 
     except KeyboardInterrupt:
         return
