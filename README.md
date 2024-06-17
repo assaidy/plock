@@ -39,6 +39,11 @@ OPTIONS:
 time formats: [$h $m $s] [$h] [$m] [$s]
 ```
 
+| Key         | Function          |
+|:------------|:------------------|
+| `Space`     | Toggle Pause      |
+| `Ctrl + C`  | Exit              |
+
 ### Examples
 
 - **Clock Mode:**
