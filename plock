@@ -183,25 +183,29 @@ def get_rand_color():
 def time_up(stdscr, initial):
     try:
         setup_curs()
-
         win = stdscr
-
         color = get_rand_color()
+        paused = False
 
         while True:
-            win.clear()
-            t = ftime(initial)
-            initial += 1
-            ascii_str = render_ascii_art(t)
-            render_curs(win, ascii_str, color)
-            win.refresh()
-            time.sleep(1)
+            if not paused:
+                win.clear()
+                t = ftime(initial)
+                initial += 1
+                ascii_str = render_ascii_art(t)
+                render_curs(win, ascii_str, color)
+                win.refresh()
+                time.sleep(1)
+            if paused:
+                time.sleep(0.1)
 
             # Check for resize event
             stdscr.nodelay(True)  # Make getch non-blocking
             key = stdscr.getch()
             if key == curses.KEY_RESIZE:
                 curses.resizeterm(*stdscr.getmaxyx())
+            if key == ord(' '):
+                paused = not paused
 
     except KeyboardInterrupt:
         return
@@ -210,24 +214,30 @@ def time_up(stdscr, initial):
 def time_down(stdscr, initial):
     try:
         setup_curs()
-
         win = stdscr
-
         color = get_rand_color()
+        paused = False
+        remaining_time = initial
 
-        for i in range(initial, 0, -1):
-            win.clear()
-            t = ftime(i)
-            ascii_str = render_ascii_art(t)
-            render_curs(win, ascii_str, color)
-            win.refresh()
-            time.sleep(1)
+        while remaining_time > 0:
+            if not paused:
+                win.clear()
+                t = ftime(remaining_time)
+                ascii_str = render_ascii_art(t)
+                render_curs(win, ascii_str, color)
+                win.refresh()
+                time.sleep(1)
+                remaining_time -= 1
+            if paused:
+                time.sleep(0.1)
 
             # Check for resize event
             stdscr.nodelay(True)  # Make getch non-blocking
             key = stdscr.getch()
             if key == curses.KEY_RESIZE:
                 curses.resizeterm(*stdscr.getmaxyx())
+            elif key == ord(" "):
+                paused = not paused
 
         win.clear()
         ascii_str = render_ascii_art("00:00:00")
