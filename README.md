@@ -4,6 +4,10 @@ This Python script provides a clock and timer functionality using the `curses` l
 It displays a real-time clock, counts up, or counts down from a specified time.
 The script also plays a bell sound when the countdown timer reaches zero.
 
+![screenshot1](./screenshots/1.png)
+![screenshot2](./screenshots/2.png)
+![screenshot3](./screenshots/3.png)
+
 ## Features
 
 - **Clock Mode:** Displays the current time in HH:MM:SS format.
